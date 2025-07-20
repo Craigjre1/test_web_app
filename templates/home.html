@@ -12,11 +12,20 @@
     </form>
 
     <ol>{% for task in task_list %}
-        <li>{{task["description"]}}</li>
-            <form method="POST" action='/dynamic'>
-                <input type="hidden" name={{task["id"]}}/>
-                <button type="submit">Delete Task</button>
-            </form>
+            <li>{{task['description']}}
+                    <form method="POST" action="{{url_for('delete',id_num=task['id'])}}">
+                        <button type="submit">Delete Task</button>
+                    </form>
+                    {% if not task['completed'] %}
+                    <form method="POST" action="{{url_for('complete',id_num=task['id'])}}">
+                    <label>
+                        <button type="submit">Submit completion</button>
+                    </label>
+                    </form>
+                    {% else %}
+                        <h3>&check; Completed</h3>
+                    {% endif %}
+            </li>
         {% endfor %}
     </ol>
 </body>
