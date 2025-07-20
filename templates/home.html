@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Task Tracker</title>
+</head>
+<body>
+    <h1>Welcome to task tracker!</h1>
+    <ol>{% for task in task_list %}
+        <li>{{task}}</li>
+        {% endfor %}
+    </ol>
+</body>
+</html>
