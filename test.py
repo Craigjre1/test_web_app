@@ -24,16 +24,9 @@ prior_period = prior_period.replace("(£)","").strip()
 comp_periods_amt = current_period + " vs. " + prior_period + " (£)"
 comp_periods_perc = current_period + " vs. " + prior_period + " (%)"
 
-for index,row in df_kpis.iterrows():
-    if row['KPI'] == 'Headcount':
-        current_headcount = row[current_period]
-        prior_headcount = row[prior_period]
-    elif row['KPI'] == 'Number of Licences':
-        current_licences = row[current_period]
-        prior_licences = row[prior_period]
-    elif row['KPI'] == 'Active Projects':
-        current_projects = row[current_period]
-        prior_projects = row[prior_period]
+kpi_dict = df_kpis.set_index("KPI")[[current_period,prior_period]].to_dict(orient="index")
+current_headcount = kpi_dict["Headcount"][current_period]
+prior_headcount = kpi_dict["Headcount"][prior_period]
 
 if current_headcount > prior_headcount:
     adjective = "increased"
@@ -48,15 +41,10 @@ for index,row in df_financials.iterrows():
 {"Amount has remained the same" if row[comp_periods_amt] ==0 else ("Amount has increased by £" if row[comp_periods_amt] > 0 else\
 "Amount has decreased by £")}{abs(row[comp_periods_amt]):,.2f} ({row[comp_periods_perc]:,.1f}%)\n\
 {"Headcount has remained the same" if adjective == 'N/A' else \
-"Headcount has " + adjective + " from " + str(prior_headcount) + " to " + str(current_headcount)}'
+"Headcount has " + adjective + " from " + str(prior_headcount) + " to " + str(current_headcount)}\n\n\
+You are an expert financial analyst, and as part of your month-end pack to the board you are providing a\
+short but meaningful and insightful explanation of the month-on-month movements for this financial line item.'
         print(prompt)
-
-
-# Line item: Salaries  
-# Current period: March 2025  
-# Prior period: February 2025  
-# Amount increased by £5,000 (4.0%)  
-# Headcount increased from 52 to 55
 
 # Write a short explanation of this change for a financial commentary.
 
