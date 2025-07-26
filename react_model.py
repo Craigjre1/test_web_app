@@ -1,54 +1,42 @@
-import ollama
 
-SYSTEM_PROMPT = """You are a smart AI agent that can use tools to answer questions. Your observations can ONLY
-come from the output of using a tool - do NOT guess. If no observations come back, continue with your reasoning
-you'll have the opportunity to iterate and re-use a tool and try again with different queries or parameters.
+from agent import ReactAgent
 
-You must think step by step. Use the following format:
-
-Thought: <your reasoning>
-Action: <tool name>
-Action Input: <input for the tool>
-Observation: <result of a tool>
-... (repeat Thought/Action/Observation as needed).
-Final Answer: <your final answer>
-
-Available tools:
-- search_tool(query: str): Searches the web for weather information.
-- convert_to_F(temp: float): Converts celsius to farenheit.
-
-If no response from a tool, say so - do not guess a result.
+TOOL_DESCRIPTION = """Available tools:
+- search_tool(query: str): Searches the web for information. Returns requested information.
+- get_storeID(location_details: string) takes the location details of the store and returns the store ID.
+- user_order(): Asks the user what they would like to order. Returns customer order.
+- get_account_details(): Asks the user for their account details. Returns user account details.
+- make_purchase(account_details: string, store_ID: string, user_order: string) uses account details, store ID and order to
+make the purchase. Returns True if successful, False if unsuccessful.
 """
 
-search_return_dict= {1:"Unable to return suitable search results for your query",
-                     2:"The highest temperature in Spain today is 30 degrees celsius",
-                     3:"The highest temperature in Harlow today is 20 degrees celsius"
-}
-
 def search_tool(pass_no,question):
-    return search_return_dict[pass_no]
+    return "Your nearest Dominos Pizza is in The Stow, Harlow"
 
-def convert_to_F(temp):
-    farenheit = temp*9/5 + 32
-    return farenheit
+def get_storeID(location_details):
+    return "The store ID is 12345678"
 
-def react_agent(user_query,max_steps):
-    history = [SYSTEM_PROMPT,f'User query: {user_query}']
+def user_order():
+    user_order = input("What would you like to order: ")
+    return user_order
 
-    for step in range(max_steps):
-        prompt = "\n".join(history)
+def get_account_details():
+    user_details = input("What are your account details? ")
+    return user_details
 
-    response = ollama.chat(
-        model="phi3:mini",
-        messages=[{"role": "user", "content": prompt}],
-        options={'temperature': 0}
-)          
-    return response['message']['content']
+def make_purchase(account_details,store_ID,user_order):
+    return True
 
-tool_map = {"search_tool":search_tool,
-            "convert_to_F":convert_to_F
+
+tool_dict = {"search_tool":search_tool,
+             "get_storeID":get_storeID,
+             "user_order":user_order,
+             "get_account_details":get_account_details,
+             "make_purchase":make_purchase#
 }
 
+OLLAMA_MODEL = "phi3:mini"
 
-user_input = input("What weather question would you like to ask? ")
-print(react_agent(user_input,1))
+my_agent = ReactAgent(3,TOOL_DESCRIPTION,tool_dict,OLLAMA_MODEL,0)
+user_input = input("What would you like to do today? ")
+my_agent(user_input)
