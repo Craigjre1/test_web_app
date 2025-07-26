@@ -3,12 +3,15 @@ import re
 
 SYSTEM_PROMPT = """You are a smart AI agent that can use tools to answer questions.
 
-You must think step by step. Use the following format:
+You must reason step by step and pause after each tool call. Use exactly this format and stop after providing an Action Input. 
+Do not continue until you receive an Observation from the user. Keep your thoughts relatively short.
 
 Thought: <your reasoning>
 Action: <tool name>
-Action Input: <input for the tool>
-After this - PAUSE. The tool you have selected will be called and return an observation to you."""
+Action Input: <input for the tool, must use positional arguments>
+
+Then STOP. Wait for the user to provide an Observation before continuing.
+"""
 
 SYSTEM_PROCEED_TEXT = """Following this observation, if you have sufficient information to proceed to a final
 answer, return your final answer in the following format:
@@ -37,7 +40,6 @@ class ReactAgent:
 
     def __call__(self,user_input):
         self.messages.append({"role": "user", "content": user_input})
-        print (f'System prompt: {self.system_prompt}, Model: {self.model}, Messages: {self.messages}')
         
         for step in range(self.iterations):
 
@@ -46,25 +48,26 @@ class ReactAgent:
             messages=self.messages,
             options={'temperature': self.temp})
             content = response['message']['content']
-            print(content)
+            print("printing:" + content)
 
-            observation = self.execute_action(response)
-            if observation[1]==1:
-                return observation[0]
+            self.messages.append({"role": "assistant","content":content})
+            action_result = self.execute_action(content)
+            if action_result[1]==1:
+                return action_result[0]
             
-            self.messages.append({"role": "agent", "content": observation[0]})
-            print(observation)
+            self.messages.append({"role": "user", "content": action_result[0]})
+            print("printing:" + action_result[0])
 
 
     def execute_action(self,agent_observation):
 
         #search for a final answer
-        final_answer = re.match(REGEX_ANSWER_PATTERN,agent_observation,re.DOTALL)
+        final_answer = re.search(REGEX_ANSWER_PATTERN,agent_observation,re.DOTALL)
         if final_answer:
             return [final_answer.group(1).strip(),1]
         
         #If no final answer, extract tool and tool input
-        action_match = re.match(REGEX_TOOL_PATTERN,agent_observation,re.DOTALL)
+        action_match = re.search(REGEX_TOOL_PATTERN,agent_observation,re.DOTALL)
         if not action_match:
             return ["Error, unable to parse response",0]
 
@@ -76,8 +79,8 @@ class ReactAgent:
 
         tool_response = self.available_tools[tool_selection](tool_input)
 
-        observation = tool_response + "\n" + SYSTEM_PROCEED_TEXT
-        return [observation,0]
+        tool_output = f'{tool_selection} response: {tool_response}, {SYSTEM_PROCEED_TEXT}'
+        return [tool_output,0]
 
 
             
